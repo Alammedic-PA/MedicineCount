@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Medicine Count Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --text-muted: #8a8a8a;
+    --accent: #2d6a4f;
+    --accent-light: #d8f3dc;
+    --accent2: #1b4332;
+    --border: #e8e6e0;
+    --red: #e63946;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #ddd8cc;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 20px 0;
+  }
+
+  .phone {
+    width: 390px;
+    min-height: 844px;
+    background: var(--bg);
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* ---- HEADER ---- */
+  .header {
+    background: var(--accent2);
+    color: white;
+    padding: 52px 24px 20px;
+    position: relative;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+
+  .header p {
+    font-size: 12px;
+    opacity: 0.6;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+
+  .settings-btn {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .tab-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .tab {
+    background: rgba(255,255,255,0.12);
+    border: none;
+    color: rgba(255,255,255,0.7);
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .tab.active {
+    background: white;
+    color: var(--accent2);
+  }
+
+  /* ---- SEARCH ---- */
+  .search-wrap {
+    padding: 16px 20px 8px;
+    background: var(--bg);
+  }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .search-box input {
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    flex: 1;
+  }
+
+  .search-box input::placeholder { color: var(--text-muted); }
+  .search-icon { color: var(--text-muted); font-size: 14px; }
+
+  /* ---- LIST ---- */
+  .list-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 20px 100px;
+  }
+
+  .list-wrap::-webkit-scrollbar { display: none; }
+
+  .medicine-item {
+    background: white;
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    gap: 12px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.15s;
+    box-shadow: var(--shadow);
+  }
+
+  .medicine-item:active { transform: scale(0.98); }
+  .medicine-item.selected { border-color: var(--accent); background: #f0faf4; }
+
+  .item-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    width: 22px;
+    flex-shrink: 0;
+  }
+
+  .item-name {
+    flex: 1;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text);
+    text-transform: capitalize;
+    line-height: 1.3;
+  }
+
+  .item-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 36px;
+    text-align: right;
+  }
+
+  .item-count.zero { color: var(--text-muted); }
+  .item-arrow { color: var(--border); font-size: 12px; }
+
+  /* ---- MODAL (centered) ---- */
+  /* ---- INLINE EXPAND PANEL ---- */
+  .inline-panel {
+    background: #f0faf4;
+    border: 2px solid var(--accent);
+    border-radius: 14px;
+    margin: 4px 0 8px;
+    padding: 14px 14px 14px;
+    animation: expandIn 0.2s ease;
+  }
+
+  @keyframes expandIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .inline-panel .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .inline-panel .panel-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .inline-panel .panel-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: var(--text-muted);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+  }
+
+  .sheet-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+  }
+
+  .sheet-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 24px;
+    line-height: 1.3;
+    text-transform: capitalize;
+  }
+
+  .qty-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .qty-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .qty-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .qty-btn:active { transform: scale(0.92); background: var(--accent-light); border-color: var(--accent); }
+
+  .qty-input {
+    flex: 1;
+    height: 48px;
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    text-align: center;
+    outline: none;
+    background: var(--bg);
+    transition: border 0.15s;
+  }
+
+  .qty-input:focus { border-color: var(--accent); background: white; }
+
+  .qty-cols {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    width: 100%;
+  }
+
+  .qty-col {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .qty-col .qty-row {
+    margin-bottom: 0;
+    gap: 4px;
+  }
+
+  .qty-col .qty-input {
+    font-size: 16px;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .qty-col .qty-btn {
+    width: 30px;
+    height: 40px;
+    font-size: 16px;
+    flex-shrink: 0;
+    padding: 0;
+  }
+
+  .total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--accent-light);
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+  }
+
+  .total-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent2);
+    letter-spacing: 0.5px;
+  }
+
+  .total-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .date-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .date-input {
+    flex: 1;
+    height: 42px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    padding: 0 12px;
+    outline: none;
+    background: var(--bg);
+  }
+
+  .date-input:focus { border-color: var(--accent); }
+
+  .save-btn {
+    width: 100%;
+    height: 52px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.15s;
+  }
+
+  .save-btn:active { transform: scale(0.97); background: var(--accent2); }
+  .save-btn:disabled { background: #ccc; cursor: not-allowed; }
+  .save-btn.loading { opacity: 0.7; }
+
+  /* ---- SETTINGS PANEL ---- */
+  .settings-panel {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    z-index: 20;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    overflow-y: auto;
+  }
+
+  .settings-panel.open { transform: translateX(0); }
+
+  .settings-header {
+    background: var(--accent2);
+    color: white;
+    padding: 52px 24px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .back-btn {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .settings-body { padding: 20px; }
+
+  .settings-section {
+    background: white;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .settings-section h3 {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 14px;
+  }
+
+  .settings-field {
+    margin-bottom: 12px;
+  }
+
+  .settings-field label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .settings-input {
+    width: 100%;
+    height: 40px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+    padding: 0 10px;
+    outline: none;
+    background: var(--bg);
+  }
+
+  .settings-input:focus { border-color: var(--accent); }
+
+  .save-settings-btn {
+    width: 100%;
+    height: 46px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  /* ---- TOAST ---- */
+  .toast {
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    right: 20px;
+    background: var(--text);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 30;
+    display: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+
+  .toast.show { display: flex; align-items: center; gap: 8px; animation: slideDown 0.3s ease; }
+  .toast.success { background: var(--accent); }
+  .toast.error { background: var(--red); }
+
+  @keyframes slideDown {
+    from { transform: translateY(-10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .medicine-item.add-new {
+    border: 2px dashed var(--accent);
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+
+  .medicine-item.add-new .item-name {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .medicine-item.add-new .item-arrow {
+    color: var(--accent);
+    font-size: 18px;
+  }
+
+  .new-name-input {
+    width: 100%;
+    border: 1.5px solid var(--accent);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    background: white;
+    outline: none;
+    margin-bottom: 10px;
+  }
+
+  .new-name-input:focus { border-color: var(--accent2); }
+
+  .panel-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .action-btn {
+    flex: 1;
+    height: 36px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.15s;
+  }
+
+  .action-btn:active { transform: scale(0.95); }
+
+  .btn-edit {
+    background: #fff3cd;
+    color: #856404;
+    border: 1.5px solid #ffc107;
+  }
+
+  .btn-delete {
+    background: #fde8e8;
+    color: var(--red);
+    border: 1.5px solid #f5a0a0;
+  }
+
+  .edit-name-input {
+    width: 100%;
+    border: 1.5px solid #ffc107;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    background: #fffdf0;
+    outline: none;
+    margin-bottom: 10px;
+  }
+
+  .edit-name-input:focus { border-color: #856404; }
+
+  .confirm-delete {
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+
+  .cancel-btn {
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .section-header {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 16px 0 8px;
+  }
+
+  .spinner { animation: spin 0.8s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <h1>Medicine Count</h1>
+        <p id="lastSync">Tap an item to update count</p>
+      </div>
+      <button class="settings-btn" onclick="openSettings()">⚙️</button>
+    </div>
+    <div class="tab-row">
+      <div id="tabRow" style="display:flex;gap:6px;"></div>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-wrap">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search medicine..." oninput="filterList()">
+    </div>
+  </div>
+
+  <!-- LIST -->
+  <div class="list-wrap" id="listWrap"></div>
+
+  <!-- INLINE EXPAND PANEL (injected dynamically) -->
+
+  <!-- SETTINGS PANEL -->
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-header">
+      <button class="back-btn" onclick="closeSettings()">←</button>
+      <h2 style="font-size:18px;font-weight:700;">Settings</h2>
+    </div>
+    <div class="settings-body">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">
+        Enter your Google Apps Script Web App URLs below. Each sheet (Elyani, Puteri, Ziqa) needs its own script URL.
+        <br><br>
+        <strong>How to set up:</strong><br>
+        1. Open your Google Sheet → Extensions → Apps Script<br>
+        2. Paste the script code (see below)<br>
+        3. Deploy → New Deployment → Web App → Anyone → Copy URL
+      </p>
+
+      <div class="settings-section">
+        <h3>Staff / Tab Names</h3>
+        <div class="settings-field">
+          <label>Tab 1 Name</label>
+          <input class="settings-input" type="text" id="tabname0" placeholder="e.g. Elyani">
+        </div>
+        <div class="settings-field">
+          <label>Tab 2 Name</label>
+          <input class="settings-input" type="text" id="tabname1" placeholder="e.g. Puteri">
+        </div>
+        <div class="settings-field">
+          <label>Tab 3 Name</label>
+          <input class="settings-input" type="text" id="tabname2" placeholder="e.g. Ziqa">
+        </div>
+        <button class="save-settings-btn" onclick="saveTabNames()">Save Names</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>Script URLs</h3>
+        <div class="settings-field">
+          <label>Elyani Sheet URL</label>
+          <input class="settings-input" type="text" id="url0" placeholder="https://script.google.com/macros/s/...">
+        </div>
+        <div class="settings-field">
+          <label>Puteri Sheet URL</label>
+          <input class="settings-input" type="text" id="url1" placeholder="https://script.google.com/macros/s/...">
+        </div>
+        <div class="settings-field">
+          <label>Ziqa Sheet URL</label>
+          <input class="settings-input" type="text" id="url2" placeholder="https://script.google.com/macros/s/...">
+        </div>
+        <button class="save-settings-btn" onclick="saveSettings()">Save Settings</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>Apps Script Code (paste in each sheet)</h3>
+        <textarea id="scriptCode" readonly style="width:100%;height:180px;font-family:'DM Mono',monospace;font-size:10px;border:1.5px solid var(--border);border-radius:10px;padding:10px;background:var(--bg);resize:none;color:var(--text);line-height:1.6;"></textarea>
+        <button class="save-settings-btn" onclick="copyScript()" style="background:var(--accent2);margin-top:8px;">📋 Copy Script</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============ DATA ============
+const medicines = [
+  // ELYANI (Sheet 0)
+  ["paracetamol 500mg tab","ponstan 500MG","brufen tab 200mg","myoflex tab","voltaren tab 50 mg","tramadol cap","synflex 500 mg","caffox tab","stemetil tab","cetrizine tab 10mg","piriton tab 4mg","clarinase tab","loratadine tab","losanges","prednisolone tab","bromhexine tab","fluconazole tablet","papase tab","ranitidine tab 150mg","omeprazole tab","dulcolax tab","daflon tab","lomotil tab","maxalon tab","gelusil tab","charcoal tablet","ural sachets","paracetamol 650mg tab","oseltalmivir tab","buscopan tab","rasitin tab","celebrex","ors electrokick","flagyl tab","augmentin tab 625mg","cephalexin cap 500mg","amoxicillin 500mg cap","doxycyclin tab 100mg","cloxacillin cap 500mg","ees tab 250mg","amlodipine 10mg -vamlo","amlodipine 5mg - vamlo","perindopril 4mg tab","nifedipine 10mg","glucovance tab 500/5mg","glucophage xr 1000mg","metoprolol 100mg","marvelon tab","cozaar xq tab 5/50mg","acetylcysteine tab NAC","veloxin tablet","glucophage xr 500mg","metformin tab 500mg","glibenclamide 5mg","gliclazide 80mg","proglutrol inventia 2/500mg","simvastatin tab 20mg","hydrochlorothiazide tab 50mg","rowatinex cap","noriday tab","gtn tab","aspirin tab","coveram 5/5mg tab","norcolut tab","yasmin tablet","rigevidon tab","nordette tab","postinor tab","allopurinol tablet","atenolol 50mg","colchicine tab 0.6mg","furosemide tab 40mg","acyclovir tab 400mg","carbimazole 5 mg tab","calcium lactate tab","multivitamin tab","folic acid-vitamine","obimin tab","glucosamine tab","mecomin bionerv","neulin sr 125mg","ventolin 2mg tab","crestor 10mg","lipitor 20mg","lipitor 40mg","zynor 10mg","zynor 5mg","alpraline tab","Viagra","mega vit d 3","mega prebiotics","mega calmag plus","megaa fish oil","cefuroxime 250mg","swecee vitamin c","fenofibrate tab","menelat 30mg tab","espran 10mg tab","MULTIVITAMIN & MINERALS","EXECUTIVE B COMPLEX","pro utix for ladies (probiotics)","normagut for helicobacter pylori (probiotics)","rosuvastatin tab","ciprofoxacin 500mg tab",""],
+  // PUTERI (Sheet 1)
+  ["paracetamol syr 60 ml","paracetamol syr 100 ml","cetrizine syrup","piriton syrup","brufen syrup","prednisolone syr","diphendry syrup","maxalon syr- gravol","buscopan syrup","kaolin syrup","carbosol syr","colimix syr","amoxicillin syrup","augmentin syr 156mg","cephalexin syr 250mg/ 5ml","prospan syrup","salbutamol syrup","bromhexine syr","bena syr - adult","mmt syrup","cmc eye/ ear drop","neo deca eye/ear drop","cmc eye ointment","eye drop normal saline","muco aid","soluwax ear drop","ketotop patch plaster","candid pessary","enema 10ml peads","enema 20ml adult","nasal spray","throat spray","flanil cream","calamine lotion","kMNo4 wash","scaboma cream","thymol gargle","lactulose syr","salbutamol inhaler","activ rub ointment","oseltalmivir syr","acyclovir syr","vitamin c soluble","zentel syrup","zentel tab","lms gel","perskindol spray","perskindol gel","soap sauber","allergocrom eye drop","Reflux g sachet","ellgy corn","clotrimazole ear drop","Promethazine syrup","soap ketoz","cool - x roll on","asumalife syrup","Gaviscon double action syr","lice lotion","symbicort turbuhaler 60 doses","seroflo inhaler","candid lotion","germacort cream","hydrocortisone cream","econazin cream","miconazole cream","zinc oxide","aqueous cream","urea cream","acyclovir cream","vaseline","annusol ointment","vitamin e cream","menthol crystal","ssd cream","himalaya baby bath","clotrimazole lotion","paracetamol sachet","gaviscon sachet","dexa- gentamicin eye drop","appeton multivitamin kids",""],
+  // ZIQA (Sheet 2)
+  ["buscopan injection","maxalon injection","ranitidine injection","prednisolone injection","piriton injection","tramadol inj","voltren injection","depo injection","ceftriaxone -Rocephin injection","Lignocaine","hydrocortisone injection","salbutamol injection","hepatitis B child vaksin","DTAP VACCINE hexaxim","mmr vaksin","meningococcal vaksin - haji","influenza vaksin","hepatitis B adult vaksin","typhoid vaksin","rotavirus vaksin","pneumoccal pneumovax 23 > 2 yrs","att injection","pneumoccal synflorix < 2yrs","chicken pox vaccine -varilix","paracetamol SUPP 250mg","paracetamol SUPP 125mg","voltaren SUPP","maxalon SUPP","annusol SUPP","d Cure vitamin D 25000 IU","ALCOHOL SWAB","ARM SLING","bandage large","bandage triangular","BLUE NEEDLE","Branula (b)","Branula butterfly","COMBO TEST","COTTON","COVID TEST","Dengue Rapid Test","Dressing set","Drug test","flavin yellow lotion","FOLI CATHETER","GLOVE","glustitch","HIV Test","INFLUENZA TEST","INFUSION SET","MEDIUM STRILE DRESSING","MICROPORE","urine pregnancy test","RYLES TUBE","SODIUM CHLORIDE","SPECULUM","SURGICAL BLADE","SURGICAL SUTURE","SYRINGE 10CC","SYRINGE 1CC","SYRINGE 3CC","SYRINGE 5CC","TONGUE DEPRESSOR","UNDER PAD","URINE BAG","urine FEME","Urine FEME (digital)","ventolin",""]
+];
+
+const sheetNames = ["Elyani", "Puteri", "Ziqa"];
+const counts = [new Array(105).fill(0), new Array(82).fill(0), new Array(69).fill(0)];
+let currentTab = 0;
+let selectedIndex = -1;
+let scriptUrls = ["https://script.google.com/macros/s/AKfycbwgZ8qlvvFAPUXRSJWbsWPk81GqiLwK5oQgUaO8uIHJFQDK18U1WBFW9Mx5cI_1qCqM/exec", "https://script.google.com/macros/s/AKfycbxdD03z0bEs3E59GgkDFdUCNFgmrBmEwmmlZ9DTQAP_odERjDmQQLIdljF9IEMrGkg/exec", "https://script.google.com/macros/s/AKfycbwlBjcIBz6cAU3vS8yrZgVXGRG46mM1DPZUL1BiwEO33cbg3mbc7gbnQxJX9EHqrK-P/exec"];
+
+// Load saved data
+function renderTabs() {
+  const row = document.getElementById('tabRow');
+  if (!row) return;
+  row.innerHTML = '';
+  sheetNames.forEach((name, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i === currentTab ? ' active' : '');
+    btn.textContent = name;
+    btn.onclick = () => switchTab(i, btn);
+    row.appendChild(btn);
+  });
+}
+
+function loadData() {
+  const saved = localStorage.getItem('medCounts');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    parsed.forEach((c, i) => { if (c) counts[i] = c; });
+  }
+  const urls = localStorage.getItem('scriptUrls');
+  if (urls) {
+    const parsed = JSON.parse(urls);
+    // Only override hardcoded URLs if user has explicitly saved custom URLs (at least one non-empty)
+    if (parsed.some(u => u)) scriptUrls = parsed;
+  }
+
+  // Load custom tab names
+  const savedNames = localStorage.getItem('sheetNames');
+  if (savedNames) {
+    const parsed = JSON.parse(savedNames);
+    parsed.forEach((n, i) => { if (n) sheetNames[i] = n; });
+  }
+
+  // populate settings inputs
+  scriptUrls.forEach((u, i) => {
+    const el = document.getElementById('url' + i);
+    if (el) el.value = u;
+  });
+  sheetNames.forEach((n, i) => {
+    const el = document.getElementById('tabname' + i);
+    if (el) el.value = n;
+  });
+}
+
+function saveData() {
+  localStorage.setItem('medCounts', JSON.stringify(counts));
+}
+
+// ============ RENDER LIST ============
+function renderList(filter = "") {
+  const wrap = document.getElementById('listWrap');
+  const list = medicines[currentTab];
+  wrap.innerHTML = '';
+
+  list.forEach((name, i) => {
+    if (filter && !name.toLowerCase().includes(filter.toLowerCase())) return;
+
+    // Medicine row
+    const isAddNew = name === '';
+    const div = document.createElement('div');
+    div.className = 'medicine-item' + (i === selectedIndex ? ' selected' : '') + (isAddNew ? ' add-new' : '');
+    div.onclick = () => openSheet(i);
+
+    const saved = counts[currentTab][i] || 0;
+    const total = typeof saved === 'object' ? saved.total : saved;
+    div.innerHTML = isAddNew ? `
+      <span class="item-num">+</span>
+      <span class="item-name">Add new medicine</span>
+      <span class="item-count"></span>
+      <span class="item-arrow">${i === selectedIndex ? '▾' : '+'}</span>
+    ` : `
+      <span class="item-num">${i + 1}</span>
+      <span class="item-name">${name}</span>
+      <span class="item-count ${total === 0 ? 'zero' : ''}">${total || '—'}</span>
+      <span class="item-arrow">${i === selectedIndex ? '▾' : '›'}</span>
+    `;
+    wrap.appendChild(div);
+
+    // Inline expand panel right below this item
+    if (i === selectedIndex) {
+      const panel = document.createElement('div');
+      panel.className = 'inline-panel';
+      panel.id = 'inlinePanel';
+      const isNew = medicines[currentTab][i] === '';
+      panel.innerHTML = `
+        <div class="panel-header">
+          <span class="panel-title">${isNew ? 'Add New Medicine' : 'Update Count'}</span>
+          <button class="panel-close" onclick="closeSheet()">✕</button>
+        </div>
+        ${isNew ? `<div class="qty-label" style="margin-bottom:6px;">Medicine Name</div>
+        <input class="new-name-input" type="text" id="newNameInput" placeholder="Enter medicine name...">` : `
+        <div class="panel-actions">
+          <button class="action-btn btn-edit" onclick="showEditName(${i})">✏️ Edit Name</button>
+          <button class="action-btn btn-delete" onclick="showDeleteConfirm(${i})">🗑️ Delete</button>
+        </div>
+        <div id="editNameWrap" style="display:none;">
+          <div class="qty-label" style="margin-bottom:6px;">Edit Medicine Name</div>
+          <input class="edit-name-input" type="text" id="editNameInput" value="${name}">
+          <button class="save-btn" onclick="saveEditName(${i})" style="height:38px;font-size:13px;margin-bottom:10px;">✅ Save Name</button>
+        </div>
+        <div id="deleteConfirmWrap" style="display:none;">
+          <p style="font-size:13px;color:var(--red);margin-bottom:10px;font-weight:500;">Remove <strong>${name}</strong> from the list?</p>
+          <button class="confirm-delete" onclick="deleteMedicine(${i})">🗑️ Yes, Delete</button>
+          <button class="cancel-btn" onclick="hideDeleteConfirm()">Cancel</button>
+        </div>`}
+        <div class="qty-cols">
+          <div class="qty-col">
+            <div class="qty-label">DIS</div>
+            <div class="qty-row">
+              <button class="qty-btn" onclick="adjustQty('dis',-1)">−</button>
+              <input class="qty-input" type="number" id="disInput" value="0" min="0" oninput="updateTotal()">
+              <button class="qty-btn" onclick="adjustQty('dis',1)">+</button>
+            </div>
+          </div>
+          <div class="qty-col">
+            <div class="qty-label">STR</div>
+            <div class="qty-row">
+              <button class="qty-btn" onclick="adjustQty('str',-1)">−</button>
+              <input class="qty-input" type="number" id="strInput" value="0" min="0" oninput="updateTotal()">
+              <button class="qty-btn" onclick="adjustQty('str',1)">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="total-row">
+          <span class="total-label">TOTAL</span>
+          <span class="total-value" id="totalValue">0</span>
+        </div>
+        <div class="qty-label" style="margin-bottom:6px;">Date</div>
+        <div class="date-row">
+          <input class="date-input" type="date" id="dateInput">
+        </div>
+        <button class="save-btn" id="saveBtn" onclick="saveEntry()" style="margin-top:12px;">
+          <span id="saveBtnText">💾 Save to Google Sheets</span>
+        </button>
+      `;
+      wrap.appendChild(panel);
+
+      // Populate values
+      const sv = counts[currentTab][i] || {dis:0, str:0};
+      document.getElementById('disInput').value = sv.dis || 0;
+      document.getElementById('strInput').value = sv.str || 0;
+      updateTotal();
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('dateInput').value = today;
+
+      // Scroll panel into view smoothly
+      setTimeout(() => panel.scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
+    }
+  });
+}
+
+function filterList() {
+  const q = document.getElementById('searchInput').value;
+  renderList(q);
+}
+
+function switchTab(idx, btn) {
+  currentTab = idx;
+  selectedIndex = -1;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('searchInput').value = '';
+  renderList();
+}
+
+// ============ BOTTOM SHEET ============
+function openSheet(idx) {
+  if (selectedIndex === idx) {
+    selectedIndex = -1; // toggle off if same item tapped
+  } else {
+    selectedIndex = idx;
+  }
+  renderList(document.getElementById('searchInput').value);
+}
+
+function closeSheet() {
+  selectedIndex = -1;
+  renderList(document.getElementById('searchInput').value);
+}
+
+function adjustQty(field, delta) {
+  const input = document.getElementById(field === 'dis' ? 'disInput' : 'strInput');
+  const val = Math.max(0, (parseInt(input.value) || 0) + delta);
+  input.value = val;
+  updateTotal();
+}
+
+function updateTotal() {
+  const dis = parseInt(document.getElementById('disInput').value) || 0;
+  const str = parseInt(document.getElementById('strInput').value) || 0;
+  document.getElementById('totalValue').textContent = dis + str;
+}
+
+// ============ SAVE TO GOOGLE SHEETS ============
+function saveEntry() {
+  const dis = parseInt(document.getElementById('disInput').value) || 0;
+  const str = parseInt(document.getElementById('strInput').value) || 0;
+  const total = dis + str;
+  const date = document.getElementById('dateInput').value;
+  let medName = medicines[currentTab][selectedIndex];
+  const url = scriptUrls[currentTab];
+  let isNewMedicine = false;
+
+  // If this is a new medicine slot, get the typed name and save it
+  if (medName === '') {
+    const newNameEl = document.getElementById('newNameInput');
+    const newName = newNameEl ? newNameEl.value.trim() : '';
+    if (!newName) {
+      showToast('⚠️ Please enter a medicine name.', 'error', 3000);
+      return;
+    }
+    medicines[currentTab][selectedIndex] = newName;
+    // Add another empty slot for future additions
+    medicines[currentTab].push('');
+    counts[currentTab].push(0);
+    medName = newName;
+    isNewMedicine = true;
+  }
+
+  // Save locally first
+  counts[currentTab][selectedIndex] = {dis, str, total};
+  saveData();
+  renderList(document.getElementById('searchInput').value);
+
+  if (!url) {
+    showToast('⚠️ No script URL set. Go to Settings.', 'error', 4000);
+    selectedIndex = -1;
+    renderList(document.getElementById('searchInput').value);
+    return;
+  }
+
+  const btn = document.getElementById('saveBtn');
+  const btnText = document.getElementById('saveBtnText');
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="spinner">⏳</span> Saving...';
+
+  function sendCount() {
+    const callbackName = 'gsCallback_' + Date.now();
+    const params = new URLSearchParams({
+      action: 'update',
+      name: medName,
+      dis: dis,
+      str: str,
+      qty: total,
+      date: date,
+      callback: callbackName
+    });
+    const script = document.createElement('script');
+    script.src = url + '?' + params.toString();
+
+    const timeout = setTimeout(() => {
+      cleanup();
+      showToast('✅ Sent to Google Sheets!', 'success');
+      document.getElementById('lastSync').textContent = 'Last sync: ' + new Date().toLocaleTimeString();
+      selectedIndex = -1;
+      renderList(document.getElementById('searchInput').value);
+      btn.disabled = false;
+      btnText.innerHTML = '💾 Save to Google Sheets';
+    }, 5000);
+
+    window[callbackName] = function(response) {
+      cleanup();
+      clearTimeout(timeout);
+      btn.disabled = false;
+      btnText.innerHTML = '💾 Save to Google Sheets';
+      if (response && response.status === 'ok') {
+        showToast('✅ Saved to Google Sheets!', 'success');
+        document.getElementById('lastSync').textContent = 'Last sync: ' + new Date().toLocaleTimeString();
+      } else {
+        const msg = response && response.msg ? response.msg : 'Unknown error';
+        showToast('❌ Error: ' + msg, 'error', 5000);
+      }
+      selectedIndex = -1;
+      renderList(document.getElementById('searchInput').value);
+    };
+
+    function cleanup() {
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[callbackName];
+    }
+
+    script.onerror = function() {
+      cleanup();
+      clearTimeout(timeout);
+      btn.disabled = false;
+      btnText.innerHTML = '💾 Save to Google Sheets';
+      showToast('❌ Could not reach script. Check your URL in Settings.', 'error', 5000);
+      selectedIndex = -1;
+      renderList(document.getElementById('searchInput').value);
+    };
+    document.head.appendChild(script);
+  }
+
+  if (isNewMedicine) {
+    // First add the name to sheet, then send count after name is written
+    const nameCb = 'gsNameFirst_' + Date.now();
+    const nameParams = new URLSearchParams({ action: 'addname', name: medName, oldName: '', callback: nameCb });
+    const nameScript = document.createElement('script');
+    nameScript.src = url + '?' + nameParams.toString();
+    window[nameCb] = function(res) {
+      if (nameScript.parentNode) nameScript.parentNode.removeChild(nameScript);
+      delete window[nameCb];
+      setTimeout(sendCount, 800); // wait 800ms for sheet to settle then send count
+    };
+    setTimeout(() => {
+      if (nameScript.parentNode) { nameScript.parentNode.removeChild(nameScript); delete window[nameCb]; }
+      setTimeout(sendCount, 500);
+    }, 5000);
+    document.head.appendChild(nameScript);
+  } else {
+    sendCount();
+  }
+}
+
+// ============ EDIT / DELETE ============
+function showEditName(idx) {
+  const wrap = document.getElementById('editNameWrap');
+  const delWrap = document.getElementById('deleteConfirmWrap');
+  if (wrap) wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+  if (delWrap) delWrap.style.display = 'none';
+}
+
+function saveEditName(idx) {
+  const input = document.getElementById('editNameInput');
+  if (!input) return;
+  const newName = input.value.trim();
+  const oldName = medicines[currentTab][idx];
+  if (!newName) { showToast('⚠️ Name cannot be empty.', 'error'); return; }
+  medicines[currentTab][idx] = newName;
+  showToast('✅ Medicine name updated!', 'success');
+  selectedIndex = -1;
+  renderList(document.getElementById('searchInput').value);
+  // Sync name change to Google Sheets
+  syncNameToSheet('editname', newName, oldName);
+}
+
+function syncNameToSheet(action, name, oldName) {
+  const url = scriptUrls[currentTab];
+  if (!url) return;
+  const callbackName = 'gsNameCb_' + Date.now();
+  const params = new URLSearchParams({ action, name, oldName: oldName || '', callback: callbackName });
+  const script = document.createElement('script');
+  script.src = url + '?' + params.toString();
+  window[callbackName] = function(res) {
+    if (script.parentNode) script.parentNode.removeChild(script);
+    delete window[callbackName];
+    if (res && res.status === 'ok') {
+      showToast('✅ Sheet updated!', 'success');
+    } else {
+      showToast('⚠️ App updated but sheet sync failed.', 'error', 4000);
+    }
+  };
+  setTimeout(() => {
+    if (script.parentNode) { script.parentNode.removeChild(script); delete window[callbackName]; }
+  }, 6000);
+  document.head.appendChild(script);
+}
+
+function showDeleteConfirm(idx) {
+  const wrap = document.getElementById('deleteConfirmWrap');
+  const editWrap = document.getElementById('editNameWrap');
+  if (wrap) wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+  if (editWrap) editWrap.style.display = 'none';
+}
+
+function hideDeleteConfirm() {
+  const wrap = document.getElementById('deleteConfirmWrap');
+  if (wrap) wrap.style.display = 'none';
+}
+
+function deleteMedicine(idx) {
+  const medName = medicines[currentTab][idx];
+  medicines[currentTab].splice(idx, 1);
+  counts[currentTab].splice(idx, 1);
+  selectedIndex = -1;
+  saveData();
+  showToast('🗑️ Medicine removed.', 'success');
+  renderList(document.getElementById('searchInput').value);
+  // Sync deletion to Google Sheets
+  syncNameToSheet('deletename', medName, '');
+}
+
+// ============ TOAST ============
+function showToast(msg, type = '', duration = 3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => { t.className = 'toast'; }, duration);
+}
+
+// ============ SETTINGS ============
+function openSettings() {
+  document.getElementById('settingsPanel').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settingsPanel').classList.remove('open');
+}
+
+function saveTabNames() {
+  [0,1,2].forEach(i => {
+    const el = document.getElementById('tabname' + i);
+    const val = el && el.value.trim();
+    if (val) sheetNames[i] = val;
+  });
+  localStorage.setItem('sheetNames', JSON.stringify(sheetNames));
+  renderTabs();
+  showToast('✅ Tab names updated!', 'success');
+  closeSettings();
+}
+
+function saveSettings() {
+  scriptUrls = [
+    document.getElementById('url0').value.trim(),
+    document.getElementById('url1').value.trim(),
+    document.getElementById('url2').value.trim()
+  ];
+  localStorage.setItem('scriptUrls', JSON.stringify(scriptUrls));
+  showToast('✅ Settings saved!', 'success');
+  closeSettings();
+}
+
+function copyScript() {
+  const code = document.getElementById('scriptCode').value;
+  navigator.clipboard.writeText(code).then(() => {
+    showToast('📋 Script copied!', 'success');
+  });
+}
+
+// ============ APPS SCRIPT CODE ============
+const appsScriptCode = `function doGet(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var medName = e.parameter.name;
+    var dis = Number(e.parameter.dis) || 0;
+    var str = Number(e.parameter.str) || 0;
+    var total = dis + str;
+    var date = e.parameter.date;
+    var callback = e.parameter.callback;
+
+    var action = e.parameter.action || 'update'; // update, addname, editname
+    var oldName = e.parameter.oldName || '';
+
+    // Find medicine row in Column A (data starts row 3)
+    var lastRow = sheet.getLastRow();
+    var medRow = -1;
+    var searchName = (action === 'editname') ? oldName : medName;
+    for (var r = 3; r <= lastRow; r++) {
+      var cell = sheet.getRange(r, 1).getValue().toString().trim().toLowerCase();
+      if (cell === searchName.trim().toLowerCase()) { medRow = r; break; }
+    }
+
+    // Handle name-only actions
+    if (action === 'addname') {
+      // Add new medicine name at end of list
+      var newRow = lastRow + 1;
+      sheet.getRange(newRow, 1).setValue(medName);
+      var result = JSON.stringify({status:"ok", action:"addname", medicine:medName, row:newRow});
+      return ContentService.createTextOutput(callback ? callback+"("+result+")" : result)
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === 'editname') {
+      if (medRow === -1) {
+        var err = JSON.stringify({status:"error", msg:"Medicine not found: "+oldName});
+        return ContentService.createTextOutput(callback ? callback+"("+err+")" : err)
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+      sheet.getRange(medRow, 1).setValue(medName);
+      var result = JSON.stringify({status:"ok", action:"editname", oldName:oldName, newName:medName, row:medRow});
+      return ContentService.createTextOutput(callback ? callback+"("+result+")" : result)
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === 'deletename') {
+      if (medRow === -1) {
+        var err = JSON.stringify({status:"error", msg:"Medicine not found: "+medName});
+        return ContentService.createTextOutput(callback ? callback+"("+err+")" : err)
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+      sheet.deleteRow(medRow);
+      var result = JSON.stringify({status:"ok", action:"deletename", medicine:medName, row:medRow});
+      return ContentService.createTextOutput(callback ? callback+"("+result+")" : result)
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (medRow === -1) {
+      var err = JSON.stringify({status:"error", msg:"Medicine not found: "+medName});
+      return ContentService.createTextOutput(callback ? callback+"("+err+")" : err)
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Sheet layout: Row1=dates, Row2=headers (Physical,DIS,STR,Total,Physical,Cast,...)
+    // Each date group = 4 cols. First group starts at col B(2).
+    // DIS col = col 3 (C), STR = col 4 (D), Total = col 5 (E) for first date group
+    // Find the date group matching today, or find next empty group
+    var formattedDate = new Date(date);
+    var lastCol = sheet.getLastColumn();
+    var disCol = -1;
+
+    // Scan row 1 for matching date or first empty slot
+    // Date groups: col 2 = Physical, col 3 = DIS, col 4 = STR, col 5 = Total, then col 6 = Physical, etc.
+    // Each group is 4 cols wide starting from col 2
+    for (var c = 2; c <= lastCol + 4; c += 4) {
+      var dateCell = sheet.getRange(1, c).getValue();
+      if (dateCell && new Date(dateCell).toDateString() === formattedDate.toDateString()) {
+        disCol = c + 1; // DIS is 2nd col in group
+        break;
+      }
+      if (!dateCell) {
+        // New date group — write date and headers
+        sheet.getRange(1, c).setValue(formattedDate);
+        sheet.getRange(2, c).setValue("Physical");
+        sheet.getRange(2, c + 1).setValue("DIS");
+        sheet.getRange(2, c + 2).setValue("STR");
+        sheet.getRange(2, c + 3).setValue("Total");
+        disCol = c + 1;
+        break;
+      }
+    }
+
+    if (disCol === -1) disCol = 3;
+
+    // Write DIS, STR, Total
+    sheet.getRange(medRow, disCol).setValue(dis);
+    sheet.getRange(medRow, disCol + 1).setValue(str);
+    sheet.getRange(medRow, disCol + 2).setValue(total);
+
+    var result = JSON.stringify({status:"ok", medicine:medName, row:medRow, disCol:disCol, dis:dis, str:str, total:total});
+    return ContentService.createTextOutput(callback ? callback+"("+result+")" : result)
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    var e2 = JSON.stringify({status:"error", msg:err.toString()});
+    var cb = e && e.parameter && e.parameter.callback;
+    return ContentService.createTextOutput(cb ? cb+"("+e2+")" : e2)
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+
+document.getElementById('scriptCode').value = appsScriptCode;
+
+// ============ INIT ============
+loadData();
+renderTabs();
+renderList();
+</script>
+</body>
+</html>
